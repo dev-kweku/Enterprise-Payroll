@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(EMPLOYEE)
+  employee     Employee?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Employee {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id])
+  firstName    String
+  lastName     String
+  ssnitNumber  String     @unique
+  taxId        String
+  bankName     String
+  bankAccount  String
+  salary       Salary?
+  leaves       Leave[]
+  payslips     Payslip[]
+  department   String?
+  position     String?
+  hireDate     DateTime?
+  managerId    String?
+  manager      Employee?  @relation("EmployeeManager", fields: [managerId], references: [id])
+  subordinates Employee[] @relation("EmployeeManager")
+
+  @@map("employees")
+}
+
+model Salary {
+  id         String   @id @default(cuid())
+  employeeId String   @unique
+  baseSalary Float
+  allowances Float
+  deductions Float
+  tier2      Float
+  tier3      Float
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("salaries")
+}
+
+model PayrollRun {
+  id        String    @id @default(cuid())
+  period    DateTime
+  processed Boolean   @default(false)
+  payslips  Payslip[]
+  createdAt DateTime  @default(now())
+
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id            String     @id @default(cuid())
+  employeeId    String
+  payrollRunId  String
+  grossPay      Float
+  paye          Float
+  ssnitEmployee Float
+  ssnitEmployer Float
+  tier2         Float
+  tier3         Float
+  netPay        Float
+  pdfUrl        String?
+  createdAt     DateTime   @default(now())
+  employee      Employee   @relation(fields: [employeeId], references: [id])
+  payrollRun    PayrollRun @relation(fields: [payrollRunId], references: [id])
+
+  @@map("payslips")
+}
+
+model Leave {
+  id         String      @id @default(cuid())
+  employeeId String
+  type       LeaveType
+  startDate  DateTime
+  endDate    DateTime
+  status     LeaveStatus @default(PENDING)
+  reason     String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+
+  @@map("leaves")
+}
+
+model TaxBracket {
+  id        String   @id @default(cuid())
+  minAmount Float
+  maxAmount Float?
+  rate      Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tax_brackets")
+}
+
+enum Role {
+  ADMIN
+  HR
+  MANAGER
+  EMPLOYEE
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  UNPAID
+  MATERNITY
+  PATERNITY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
