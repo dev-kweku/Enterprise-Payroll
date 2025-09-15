@@ -27,26 +27,35 @@
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<RegisterFormValues>({
-        resolver: zodResolver(registerSchema),
-    })
+        reset,
+        } = useForm<RegisterFormValues>({
+            resolver: zodResolver(registerSchema),
+            defaultValues: {
+            email: '',
+            password: '',
+            confirmPassword: '',
+            firstName: '',
+            lastName: '',
+            },
+        });
 
     const onSubmit = async (data: RegisterFormValues) => {
         setIsLoading(true)
 
         try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-            'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-            email: data.email,
-            password: data.password,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            }),
-        })
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: data.email,
+                    password: data.password,
+                    confirmPassword: data.confirmPassword, // Include this field
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                }),
+            });
 
         if (!response.ok) {
             const error = await response.json()

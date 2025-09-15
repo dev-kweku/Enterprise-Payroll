@@ -48,11 +48,18 @@
             return null
             }
 
+            // Create a name from employee first and last name, or use email as fallback
+            const name = user.employee 
+            ? `${user.employee.firstName} ${user.employee.lastName}`
+            : user.email
+
+            // Return a User object that matches NextAuth's expectations
             return {
             id: user.id,
             email: user.email,
+            name: name, // Use the constructed name
             role: user.role,
-            employeeId: user.employee?.id,
+            employeeId: user.employee?.id || null,
             }
         },
         }),
@@ -69,7 +76,7 @@
         if (token) {
             session.user.id = token.sub!
             session.user.role = token.role as Role
-            session.user.employeeId = token.employeeId as string
+            session.user.employeeId = token.employeeId as string | null
         }
         return session
         },
